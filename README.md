@@ -9,4 +9,6 @@ Can include but not confined to :
 - Leetcode problems
 - Project brainchilds
 
+**Note:** The code does not mostly conforms to coding standards. This is for fast prototyping and learning.
+
 Let's have some fun!
