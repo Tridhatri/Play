@@ -5,7 +5,7 @@ This is a repo for playing with things.
 Can include but not confined to :
 - Code snippets
 - Experimental code
-- Random BS
+- Random stuff
 - Leetcode problems
 - Project brainchilds
 
