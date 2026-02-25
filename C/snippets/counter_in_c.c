@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>  // Added this - you need it for malloc and calloc
+
+// Somehow microsoft's cl compiler did not complain when i did not include the header!
 
 // There is no dictionary in C
 // How do you return the corresponding frquency, like a key -value pair
@@ -112,7 +115,7 @@ void* counter(int* nums, int len_of_nums){
     // No i mean, counter.element will always have garbage values, so we cannot check if the element is already in the counter array or not, because we are not populating the counter[].element with the elements of the nums array, so we need to first populate the counter[].element with the elements of the nums array, and then we can check if the element is already in the counter array or not, and then we can increase the count accordingly.
     
     for(int i = 0; i < len_of_counter; i++){
-        counter[i].element = (int)0; // initializing the element field of the counter array to 0, which is a placeholder value, and we will populate it with the actual elements of the nums array as we iterate through the nums array.
+        counter[i].element = -1; // Changed from 0 to -1 to avoid conflict with actual 0 values in nums
     }
 
     // But what if the nums array has 0 as an element, then we will have a conflict with the placeholder value of 0 in the counter array, so we need to choose a different placeholder value that is not present in the nums array, or we can use a flag variable to indicate whether the element field of the counter array has been populated with an actual element from the nums array or not, and we can check this flag variable before checking if the element is already in the counter array or not, and then we can increase the count accordingly.
@@ -122,13 +125,17 @@ void* counter(int* nums, int len_of_nums){
     // So
     // The example code for that is 
 
-    int flag[len_of_counter];
+    //int flag[len_of_counter];
+    // we cannot do this becausae len_of_counter is a function parameter and can change .
+    // So we use calloc to initalise it to 0, which indicates that the element field of the counter array has not been populated with an actual element from the nums array yet, and we will set it to 1 when we populate the element field of the counter array with an actual element from the nums array.
+    
 
+    int *flag = (int *)calloc(len_of_counter, sizeof(int));
+    // calloc function signature is void* calloc(size_t num, size_t size);
+    // calloc allocates a block of memory for an array of num elements, each of them size bytes long, and initializes all its bits to zero.
 
-    // flag array to indicate whether the element field of the counter array has been populated with an actual element from the nums array or not
-    for(int i = 0; i < len_of_counter; i++){
-        flag[i] = 0; // initializing the flag array to 0, which indicates that the element field of the counter array has not been populated with an actual element from the nums array yet
-    }
+    int counter_index = 0; // Added this to track where to place new elements
+
 
 
 
@@ -137,25 +144,28 @@ void* counter(int* nums, int len_of_nums){
     // So, count the elements
     // Actually first populate the counter with the elements according to the nums array
     // So, 
-    int to_find = (int)*(nums+i);
+        int to_find = (int)*(nums+i);
     // if *(nums+i) already there in counter[].element, then increase the counter[].count
-    //
-    //
-    //
-    
 
-    if(counter[i].element == to_find && flag[i] == 1){
-        // We have found the element already in the counter
-        // WE increase the counter by 1
-        counter[i].count++;
-    }
-    else{
-        // We did not find the element, so we make space and allot it
-        counter[i].element = to_find;
-        counter[i].count++;
-        flag[i] = 1; // setting the flag to 1, which indicates that the element field of the counter array has been populated with an actual element from the nums array
-    }
+    // Fixed: Search through all existing counter entries, not just counter[i]
+        int found = 0;
+        for(int j = 0; j < counter_index; j++){
+            if(counter[j].element == to_find && flag[j] == 1){
+                // We have found the element already in the counter
+                // WE increase the counter by 1
+                counter[j].count++;
+                found = 1;
+                break;
+            }
+        }
 
+        if(!found){
+            // We did not find the element, so we make space and allot it
+            counter[counter_index].element = to_find;
+            counter[counter_index].count = 1; // Changed from ++ to = 1
+            flag[counter_index] = 1; // setting the flag to 1, which indicates that the element field of the counter array has been populated with an actual element from the nums array
+            counter_index++; // Move to next available position
+        }
    }
 
 // counter is the pointer to the array, which is basically the array itself, 
@@ -170,13 +180,15 @@ int main(){
 
 int nums[] = {1,2,2,3,3,3, 4};
 int len_of_nums = (int)sizeof(nums)/sizeof(int);
-counter_of_single_element *counter_result = counter(nums, len_of_nums);
+counter_of_single_element *counter_result = (counter_of_single_element *)counter(nums, len_of_nums); // Added cast
 // counter_result is a pointer to the array of struct counter_of_single_element, which is basically the array itself,
 // so we can use this pointer to access the elements of the array and get the counts of the elements in the input array.
 // Displaying the counter_result
 for(int i = 0; i < len_of_nums; i++){
-    printf("Element: %d, Count: %d\n", (counter_result[i]).element, (counter_result[i]).count);
+    if(counter_result[i].count > 0){ // Added check to only print valid entries
+        printf("Element: %d, Count: %d\n", (counter_result[i]).element, (counter_result[i]).count);
+    }
 }
 
-
-};
+return 0; // Added return statement
+}
