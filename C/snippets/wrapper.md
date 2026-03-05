@@ -409,3 +409,13 @@ This separation is what makes C both portable and efficient.
 
 If you want, I can walk you through how glibc’s ptmalloc, jemalloc, and the Windows heap each structure their metadata — they’re wildly different and make the privacy of the header very clear.
 
+
+# RESOURCES
+
+
+Udemy Heap exploration course : https://www.udemy.com/course/linux-heap-exploitation-part-1/ 
+Blog on glibc heap internals : https://nyxfault.github.io/posts/Glibc-Internals/
+Implementing Malloc : https://moss.cs.iit.edu/cs351/slides/slides-malloc.pdf
+Malloc wiki glibc : https://sourceware.org/glibc/wiki/MallocInternals
+Memory allocator on Uni illinois : https://courses.grainger.illinois.edu/cs340/sp2024/mp/
+
