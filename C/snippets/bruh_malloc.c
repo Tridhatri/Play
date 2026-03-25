@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <unistd.h>
+
+
+#define _DEFAULT_SOURCE
 
 // Define an enum for the state of the chunk (used or free).
 
@@ -31,9 +35,11 @@ void* heap_start;
 void* bruh_malloc(size_t size){
 
     // Store the metadata.
-    header* h = sbrk(sizeof(header));
+    header* h = (header*) sbrk((int)sizeof(header));
+
+    printf("the sbrk is : %p\n", sbrk(0));
     h->size_of_chunk = size;
-    h->chunk_size = USED; 
+    h->chunk_state = USED; 
     
     // Next.
     void* ptr = sbrk(size);  // sbrk increments the heap end by size but returns the pointer to the old heap end.
@@ -63,16 +69,24 @@ void* fw_coalescing(void* chunk1) {
     // First check if the current chunk is freed.
 
     // 1. Get the next chunk
-    header* chunk1 =  (header*) chunk1;
-
-    header* next_chunk_header = &(chunk1[chunk1->size_of_chunk + sizeof(footer)]);
-    // Next_chunk is pointer to the header of the next_chunk.
+   //header* chunk1 =  (header*) chunk1;
+   // (header*) chunk2; // payload
+  // void* chunk is actually the datapayload
 
     header *chunk1_header = (header*)chunk1 - sizeof(header);
 
+    //header* next_chunk_header = &((header*)chunk1[(int)((header*)chunk1->size_of_chunk) + sizeof(footer)]);
+    header* next_chunk_header = chunk1_header->size_of_chunk + chunk1_header + sizeof(footer);
+
+
+
+    footer* chunk_footer = (footer*)(chunk1 + (chunk1_header->size_of_chunk));
+    // Next_chunk is pointer to the header of the next_chunk.
+
+
 
     // 2. Check if coalesc is possible.
-    if((chunk1_header->chunk_state == USED ) && (next_chunk->chunk_state == USED) {
+    if((chunk1_header->chunk_state == USED ) && (next_chunk_header->chunk_state == USED)){
         printf("Bruh.This chunk or the next chunk is still in use! Cannot coalesc!");
         return NULL;
     }
@@ -80,7 +94,7 @@ void* fw_coalescing(void* chunk1) {
     // 3. At this point coalesc is possible, 
     // 3. use brk or sbrk. Ok why do you need brk or sbrk. Do not require this.
     //chunk1->size_of_chunk = chunk1->size_of_chunk + sizeof(next_chunk's header) + next_chunk->size_of_chunk;  
-    chunk1_header->size_of_chunk = chunk1_header->size_of_chunk + sizeof(footer) + sizeof(header) + next_chunk_header->size_of_chunk;  
+    chunk1_header->size_of_chunk = chunk1_header->size_of_chunk + sizeof(footer) + sizeof(header) + next_chunk_header->size_of_chunk;
 
     // How to get teh next_chunk's header size.
     // I know it is basically sizeof(header)
@@ -90,7 +104,7 @@ void* fw_coalescing(void* chunk1) {
     // Get the chunk1's new footer.
     footer* chunk1_footer = &(chunk1[chunk1_header->size_of_chunk]);
     chunk1_footer->size_of_chunk = (chunk1_header->size_of_chunk);
-    chunk1_footer->footer = chunk1_header->chunk_state;
+    chunk1_footer->chunk_state = chunk1_header->chunk_state;
 
     // Now just return the pointer to the bin (chunk1 + next_chunk).
 
@@ -109,7 +123,6 @@ void* bw_coalescing(void* chunk) {
 
 // 1. Get the headers and footers of the current chunk.
 
-header* chunk = (header*) chunk;
 
 
 header* chunk_header  = chunk - sizeof(header);
@@ -134,61 +147,41 @@ if((chunk_header->chunk_state != FREE) && (prev_chunk_header->chunk_state != FRE
 
     // Now what. Both of them are free.
     // You should combine these two
-    prev_chunk_header->size_of_chunk = (prev_chunk_header->size_of_chunk) + sizeof(footer) + sizeof(header) + (next_chunk_header->size_of_chunk);
-    prev_chunk_header->chunk_status = FREE;
+    prev_chunk_header->size_of_chunk = (prev_chunk_header->size_of_chunk) + sizeof(footer) + sizeof(header) + (prev_chunk_header->size_of_chunk);
+    prev_chunk_header->chunk_state = FREE;
     
 
 
     prev_chunk_footer->size_of_chunk = (prev_chunk_header->size_of_chunk);
-    prev_chunk_header->chunk_status = FREE;
+    prev_chunk_header->chunk_state = FREE;
+    
 
      return ((void*)prev_chunk_header + sizeof(prev_chunk_header));
 }
 
 
+void* basic_ass_free(void *chunk) {
+
+  printf("The sbrk in basica ass free is : %p \n", sbrk(0));
+  header* chunk_header = (header*)chunk - sizeof(header);
+  printf("The sbrk in basica ass free after the chunk_header extraction is : %p \n", sbrk(0));
+
+  chunk_header->chunk_state = FREE;
+
+  printf("The chunk is freed!\n");
+  return (void*)chunk;
+  
+
+
+}
+
 // TO-do : can you do merge_two_chunks_atomic interface 
-
-
-
-
-
-
-
-
-
-
-
-}
-
-
-
 int main() {
-    void*a = bruh_malloc(256);
+    void* a = bruh_malloc(256);
+    void*b = bruh_malloc(256);
+    basic_ass_free(a);
+    
+    //fw_coalescing(void* chunk1)
+
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
